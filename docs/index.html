@@ -105,14 +105,14 @@ function render(p){
   document.title = `${p.name||p.username} ${m}月 | DeNA Creator Links`;
 
   const tiles = [
-    ["ダイヤモンド", c.diamonds, "", 0, v.diamonds],
+    ["ダイヤモンド", c.diamonds, "ダイヤ", 0, v.diamonds],
     ["LIVE時間", c.live_hours, "時間", 1, v.live_hours],
     ["有効LIVE日数", c.valid_days, "日", 0, v.valid_days],
     ["新規フォロワー", c.new_followers, "人", 0],
     ["LIVE Match数", c.match_count, "回", 0],
-    ["LIVE Matchで獲得したダイヤ", c.match_diamonds, "", 0, null, matchShare!=null?`ダイヤ全体の ${fmt(matchShare,1)}%`:""],
-    ["インプレッション", c.impressions, "", 0],
-    ["1日あたりダイヤ", c.valid_days? c.diamonds/c.valid_days : null, "", 0, v.valid_days? v.diamonds/v.valid_days:null, "有効LIVE日1日あたり"],
+    ["LIVE Matchで獲得したダイヤ", c.match_diamonds, "ダイヤ", 0, null, matchShare!=null?`ダイヤ全体の ${fmt(matchShare,1)}%`:""],
+    ["インプレッション", c.impressions, "回", 0],
+    ["1日あたりダイヤ", c.valid_days? c.diamonds/c.valid_days : null, "ダイヤ", 0, v.valid_days? v.diamonds/v.valid_days:null, "有効LIVE日1日あたり"],
   ];
   $("#app").innerHTML = `
   <header class="hero">
@@ -136,7 +136,7 @@ function render(p){
   <h2>前月との比較</h2>
   <div class="panel">
     <div class="legend"><span style="--c:var(--accent)">${m}月（${elapsed}日時点）</span><span style="--c:var(--prev)">${pm}月（確定）</span></div>
-    <div class="cmp">${[["ダイヤモンド",c.diamonds,v.diamonds,"",0],["LIVE時間",c.live_hours,v.live_hours,"時間",1],["有効LIVE日数",c.valid_days,v.valid_days,"日",0]].map(([k,a,b,u,d])=>{
+    <div class="cmp">${[["ダイヤモンド",c.diamonds,v.diamonds,"ダイヤ",0],["LIVE時間",c.live_hours,v.live_hours,"時間",1],["有効LIVE日数",c.valid_days,v.valid_days,"日",0]].map(([k,a,b,u,d])=>{
       const mx = Math.max(a||0,b||0)||1;
       return `<div class="cmprow"><div class="lab"><span>${k}</span><span>${chg(pct(a,b))}</span></div>
         <div class="bar cur"><i style="width:${(a||0)/mx*100}%"></i></div><div class="lab"><span style="color:var(--muted);font-size:11px">${m}月</span><span style="font-size:11px">${fmt(a,d)}${u}</span></div>
