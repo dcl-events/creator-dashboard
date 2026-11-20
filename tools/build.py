@@ -42,6 +42,25 @@ for ag in AGENCIES:
         for x in json.load(open(ns[-1]))["rows"]:
             if x.get("liverName"): names[str(x["creatorId"])] = x["liverName"]
 
+# アイコン＝毎朝のavatars_*.json。署名付きURLは数日で切れるので画像を落として暗号化JSONに埋め込む
+import urllib.request
+avatars = {}
+for ag in AGENCIES:
+    fs = sorted(glob.glob(f"{DL}/{ag}_Backstage_TikTokLIVE/avatars_*.json"))
+    if fs:
+        for x in json.load(open(fs[-1]))["rows"]:
+            u = (x.get("raw") or {}).get("avatar")
+            if u: avatars[str(x["creatorId"])] = u
+def fetch_avatar(cid):
+    u = avatars.get(cid)
+    if not u: return None
+    try:
+        with urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0"}), timeout=15) as r:
+            ctype = r.headers.get("Content-Type", "image/webp").split(";")[0]
+            return f"data:{ctype};base64," + base64.b64encode(r.read()).decode()
+    except Exception as e:
+        print("avatar取得失敗", cid, e); return None
+
 people = {}
 for ag, fs in files.items():
     mfs = [f for f in fs if f"_{latest_month}_" in f]
@@ -74,6 +93,7 @@ for p in people.values():
     seen = {}
     for x in p["daily"]: seen[x["date"]] = x
     p["daily"] = sorted(seen.values(), key=lambda x: x["date"])
+    p["avatar"] = fetch_avatar(p["id"])
     # 1人ずつ固有の鍵でAES-GCM暗号化（鍵は一度作ったら固定＝配ったURLが変わらない）
     if p["id"] not in keys: keys[p["id"]] = b64(secrets.token_bytes(16))
     k = base64.urlsafe_b64decode(keys[p["id"]] + "==")
