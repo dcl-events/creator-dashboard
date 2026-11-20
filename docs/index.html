@@ -60,6 +60,11 @@ h2::before{content:"♡";color:var(--accent);font-size:16px}
 .list a:hover{background:#fff0f5}
 .notice{margin:14px 0 0;padding:12px 14px;border-radius:16px;background:#fff;border:1px dashed #f3bcd0;font-size:12px;line-height:1.75;color:var(--ink)}
 .notice b{color:var(--accent)}
+.who{position:relative;display:flex;align-items:center;gap:14px;margin:10px 0 8px}
+.who .av{flex:0 0 64px;width:64px;height:64px;border-radius:50%;object-fit:cover;background:#fff;
+  border:3px solid #fff;box-shadow:0 4px 12px rgba(240,106,155,.25)}
+.who .avph{display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:var(--accent)}
+.who h1{margin:0 0 2px}
 footer{margin-top:32px;font-size:11px;color:var(--muted);text-align:center;line-height:1.7}
 </style>
 </head>
@@ -117,8 +122,10 @@ function render(p){
   $("#app").innerHTML = `
   <header class="hero">
     <div class="pf">TikTok LIVE · ${y}年${m}月</div>
-    <h1>${esc(p.name||p.username)}</h1>
-    <div class="meta" style="margin:-2px 0 8px">@${esc(p.username)}</div>
+    <div class="who">
+      ${p.avatar?`<img class="av" src="${p.avatar}" alt="">`:`<div class="av avph">${esc([...(p.name||p.username)][0])}</div>`}
+      <div><h1>${esc(p.name||p.username)}</h1><div class="meta">@${esc(p.username)}</div></div>
+    </div>
     <div class="meta">${y}/${m}/1 〜 ${m}/${elapsed} 時点</div>
     <div class="meta">データ取得日：${(p.fetched||"").replaceAll("-","/")}</div>
     <div class="big"><span class="v">${fmt(c.diamonds)}</span><span class="u">ダイヤ</span>
