@@ -14,10 +14,10 @@ for p in idx:  # 当月ダイヤの多い順
     r = src.get(p["id"], {})
     row = [r.get(c, "") for c in COLS]
     row[0] = row[0] or p["name"]; row[4] = p["id"]; row[5] = row[5] or p["username"]
-    rows.append(row + [p["url"]])
+    rows.append(row + [p["url"], "○" if p.get("over_now") else "", p.get("since", "")])
 gc = gspread.service_account(os.path.expanduser("~/Claude/pococha/service_account.json"))
 ws = [w for w in gc.open_by_key(SHEET).worksheets() if w.id == GID][0]
 ws.clear()
-ws.update(range_name="A1", values=[[f"最終更新 {dt.datetime.now():%Y/%m/%d %H:%M}（対象＝当月or前月 20万ダイヤ以上・退会者除く）"],
-                                   COLS + ["ダッシュボードURL"]] + rows, value_input_option="RAW")
+ws.update(range_name="A1", values=[[f"最終更新 {dt.datetime.now():%Y/%m/%d %H:%M}（一度20万ダイヤを超えた人は残す・退会者のみ除外）"],
+                                   COLS + ["ダッシュボードURL", "当月20万ダイヤ以上", "掲載開始月"]] + rows, value_input_option="RAW")
 print(f"{len(rows)}行を書き込み（元TSV: {os.path.basename(tsv)}）")

@@ -14,6 +14,8 @@ KEYS_F = os.path.join(PRIV, "keys.json")
 keys = json.load(open(KEYS_F)) if os.path.exists(KEYS_F) else {}
 b64 = lambda b: base64.urlsafe_b64encode(b).decode().rstrip("=")
 THRESH = 200_000
+ROSTER_F = os.path.join(PRIV, "roster.json")   # {クリエイターID: 掲載開始月}。一度入ったら残す
+roster = json.load(open(ROSTER_F)) if os.path.exists(ROSTER_F) else {cid: "2026-11" for cid in keys}
 AGENCIES = {"Nグループ": "Nグループ", "DCL": "DCL"}
 
 def num(v):
@@ -67,9 +69,12 @@ for ag, fs in files.items():
     latest = mfs[-1]
     for r in rows(latest):
         cur, prev = num(r["ダイヤモンド"]) or 0, num(r["先月のダイヤモンド数"]) or 0
-        if max(cur, prev) < THRESH: continue
         cid = str(r["クリエイターID"])
         if not cid.isdigit(): continue  # 退会済みはIDが「クリエイターがエージェンシーを退会しました」になる
+        # 一度20万ダイヤを超えて名簿に入った人は、下回っても消さない（退会だけが外れる条件）
+        if max(cur, prev) >= THRESH:
+            roster.setdefault(cid, f"{latest_month[:4]}-{latest_month[4:]}")
+        elif cid not in roster: continue
         people[cid] = {
             "id": cid, "agency": ag, "username": r["クリエイターのユーザー名"], "name": names.get(str(r["クリエイターID"]), r["クリエイターのユーザー名"]),
             "period": r["データ期間"], "month": latest_month,
@@ -102,9 +107,11 @@ for p in people.values():
     json.dump({"v": 1, "iv": b64(iv), "ct": b64(ct)}, open(f"{OUT}/{p['id']}.enc.json", "w"))
     p["url"] = f"{BASE_URL}?id={p['id']}#k={keys[p['id']]}"
 json.dump(keys, open(KEYS_F, "w"), indent=1)
+json.dump(roster, open(ROSTER_F, "w"), indent=1)
 for f in glob.glob(f"{OUT}/*.json"):   # 平文や対象外になった人の古いファイルを掃除
     if not any(f.endswith(f"/{i}.enc.json") for i in people): os.remove(f)
 json.dump(sorted(({"id": p["id"], "username": p["username"], "name": p["name"], "agency": p["agency"],
-                   "diamonds": p["cur"]["diamonds"], "url": p["url"]} for p in people.values()),
+                   "diamonds": p["cur"]["diamonds"], "url": p["url"],
+                   "over_now": p["cur"]["diamonds"] >= THRESH, "since": roster[p["id"]]} for p in people.values()),
                  key=lambda x: -x["diamonds"]), open(f"{PRIV}/index.json", "w"), ensure_ascii=False, indent=1)
 print(f"{latest_month}: {len(people)}人 → {OUT}")
